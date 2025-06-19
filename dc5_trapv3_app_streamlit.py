@@ -1,8 +1,8 @@
-
 import pandas as pd
 import random
 from collections import Counter
 import streamlit as st
+import itertools
 
 # --- V-Trac Mapping ---
 def get_vtrac(digit):
@@ -67,12 +67,22 @@ if seed and len(seed) == 5:
         assert len(cold_digits) >= 3, "At least 3 cold digits required."
         assert 2 <= len(due_digits) <= 5, "Due digits must be between 2 and 5."
 
-        import itertools
-        source_digits = list(set(hot_digits + cold_digits + due_digits))
-        all_combos = list(itertools.product(source_digits, repeat=5))
+        # --- Full Enumeration (using 2-digit pairs from seed) ---
+        two_digit_pairs = list(set([seed[i]+seed[j] for i in range(5) for j in range(i+1,5)]))
+        three_digit_sets = list(itertools.product(range(10), repeat=3))
+        all_combos = []
+        for pair in two_digit_pairs:
+            for triplet in three_digit_sets:
+                combo = list(pair) + list(triplet)
+                if sum(combo.count(d) for d in seed_digits) >= 2:
+                    all_combos.append(combo)
+
         df = pd.DataFrame(all_combos, columns=["D1", "D2", "D3", "D4", "D5"])
         df["Combo"] = df.apply(lambda row: "".join(map(str, row)), axis=1)
+        df = df.drop_duplicates(subset=["Combo"])
         df["Digits"] = df[["D1", "D2", "D3", "D4", "D5"]].values.tolist()
+
+        st.markdown(f"**Total combinations in play pool after full enumeration and deduplication: {len(df)}**")
 
         seed_sum = sum(seed_digits)
         df["Combo Sum"] = df["Digits"].apply(sum)
@@ -98,6 +108,16 @@ if seed and len(seed) == 5:
             (any(abs(combo[i] % 2 - seed_digits[i % 5] % 2) == 1 for i in range(5))) +
             (sum(1 for d in combo if d in [0, 2, 4, 5, 6, 9]) >= 2)
         ))
+
+        st.markdown("### Manual Filters:")
+        st.markdown("- ✅ F1: Consecutive ≥4")
+        st.markdown("- ✅ F2: Spread < 4")
+        st.markdown("- ✅ F3: All 0–5")
+        st.markdown("- ✅ F4: 4 in ±2 Range")
+        st.markdown("- ✅ F5: Both V-Tracs Match")
+        st.markdown("- ✅ Hot Digit Match")
+        st.markdown("- ✅ Cold Digit Match")
+        st.markdown("- ✅ Due Digit Match")
 
         filters = [
             "F1: Consecutive ≥4", "F2: Spread < 4", "F3: All 0–5", "F4: 4 in ±2 Range",
