@@ -56,7 +56,7 @@ hot_input = st.text_input("Enter at least 3 hot digits (comma-separated):", "0,5
 cold_input = st.text_input("Enter at least 3 cold digits (comma-separated):", "2,3,7")
 due_input = st.text_input("Enter 2 to 5 due digits (comma-separated):", "1,4")
 
-if seed and len(seed) == 5:
+if seed and len(seed) == 5 and seed.isdigit():
     try:
         hot_digits = [int(d.strip()) for d in hot_input.split(",") if d.strip().isdigit()]
         cold_digits = [int(d.strip()) for d in cold_input.split(",") if d.strip().isdigit()]
@@ -68,7 +68,7 @@ if seed and len(seed) == 5:
         assert 2 <= len(due_digits) <= 5, "Due digits must be between 2 and 5."
 
         # --- Full Enumeration (using 2-digit pairs from seed) ---
-        two_digit_pairs = list(set([seed[i]+seed[j] for i in range(5) for j in range(i+1,5)]))
+        two_digit_pairs = list(set([(int(seed[i]), int(seed[j])) for i in range(5) for j in range(i+1, 5)]))
         three_digit_sets = list(itertools.product(range(10), repeat=3))
         all_combos = []
         for pair in two_digit_pairs:
