@@ -94,8 +94,9 @@ if seed and len(seed) == 5 and seed.isdigit():
         df_intersect = df_formula[df_formula["Combo"].isin(df_percentile["Combo"])]
         st.markdown(f"**Step 4 – Intersection of Formula & Percentile Survivors:** {len(df_intersect)} combos ✅")
 
-        # Step 5: Deduplication
-        df = df_intersect.drop_duplicates(subset=["Combo"])
+        # Step 5: Deduplication (ensure box uniqueness)
+        df_intersect["Sorted"] = df_intersect["Combo"].apply(lambda x: "".join(sorted(x)))
+        df = df_intersect.drop_duplicates(subset=["Sorted"])
         df["Digits"] = df[["D1", "D2", "D3", "D4", "D5"]].values.tolist()
         st.markdown(f"**Step 5 – Deduplication (Box Uniqueness):** {len(df)} unique combos ✅")
 
